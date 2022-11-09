@@ -9,7 +9,7 @@ class UserAddress extends Model
 {
     use HasFactory;
 
-    protected $filllable = [
+    protected $fillable  = [
         'province',
         'city',
         'district',
@@ -17,7 +17,7 @@ class UserAddress extends Model
         'zip',
         'contact_name',
         'contact_phone',
-        'last_used_at'
+        'last_used_at',
     ];
 
     protected $dates = ['last_used_at'];

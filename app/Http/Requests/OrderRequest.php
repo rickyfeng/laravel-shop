@@ -49,4 +49,11 @@ class OrderRequest extends FormRequest
             'items.*.amount'    => ['required', 'integer', 'min:1'],
         ];
     }
+
+    public function messages()
+    {
+        return [
+            'items.required' => '购买的商品不能为空',
+        ];
+    }
 }

@@ -16,23 +16,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        // 支付宝单例对象
-        $this->app->singleton('alipay', function() {
+        // 往服务容器中注入一个名为 alipay 的单例对象
+        $this->app->singleton('alipay', function () {
             $config = config('pay.alipay');
-
-            // 判断是否在线上环境
-            if (app()->environment() != 'production'){
-                $conifg['mode']         = 'dev';
+            // 判断当前项目运行环境是否为线上环境
+            if (app()->environment() !== 'production') {
+                $config['mode']         = 'dev';
                 $config['log']['level'] = Logger::DEBUG;
-            }else{
+            } else {
                 $config['log']['level'] = Logger::WARNING;
             }
-
-            //创建支付宝对象
+            // 调用 Yansongda\Pay 来创建一个支付宝支付对象
             return Pay::alipay($config);
         });
 
-        // 微信支付单例对象
         $this->app->singleton('wechat_pay', function () {
             $config = config('pay.wechat');
             if (app()->environment() !== 'production') {
@@ -43,9 +40,7 @@ class AppServiceProvider extends ServiceProvider
             // 调用 Yansongda\Pay 来创建一个微信支付对象
             return Pay::wechat($config);
         });
-        
-    }
-    
+    }   
 
     /**
      * Bootstrap any application services.

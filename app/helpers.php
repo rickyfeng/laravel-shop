@@ -13,3 +13,13 @@ function dda($model)
         dd($model);
     }
 }
+
+function ngrok_url($routeName, $parameters = [])
+{
+    if (app()->environment('local') && $url = config('app.ngrok_url')) {
+        // route() 函数第三个参数代表是否绝对路径
+        return $url.route($routeName, $parameters, false);
+    }
+
+    return route($routeName, $parameters);
+}

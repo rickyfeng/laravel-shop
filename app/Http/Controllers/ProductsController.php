@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Exceptions\InvalidRequestException;
+use App\Models\OrderItem;
 
 class ProductsController extends Controller
 {
@@ -15,17 +16,17 @@ class ProductsController extends Controller
         if ($search = $request->input('search', '')) {
             $like = '%' . $search . '%';
 
-            $builder->where(function($query) use ($like) {
-                $query->where('title', 'like' , $like)
+            $builder->where(function ($query) use ($like) {
+                $query->where('title', 'like', $like)
                     ->orWhere('description', 'like', $like)
-                    ->orWhereHas('skus', function($query) use ($like){
-                        $query->where('title' , 'like', $like)
+                    ->orWhereHas('skus', function ($query) use ($like) {
+                        $query->where('title', 'like', $like)
                             ->orWhere('description', 'like', $like);
                     });
             });
         }
 
-        if ($order = $request->input('order' , '')) {
+        if ($order = $request->input('order', '')) {
             if (preg_match('/^(.+)_(asc|desc)$/', $order, $m)) {
                 if (in_array($m[1], ['price', 'sold_count', 'rating'])) {
                     $builder->orderBy($m[1], $m[2]);
@@ -36,17 +37,17 @@ class ProductsController extends Controller
         $products = $builder->paginate(16);
 
         return view('products.index', [
-            'products'  => $products,
-            'filters'   => [
-                'search'    => $search,
-                'order'     => $order
+            'products' => $products,
+            'filters' => [
+                'search' => $search,
+                'order' => $order
             ]
         ]);
     }
 
     public function show(Product $product, Request $request)
     {
-        if (! $product->on_sale) {
+        if (!$product->on_sale) {
             throw new InvalidRequestException('商品未上架');
         }
 
@@ -55,7 +56,19 @@ class ProductsController extends Controller
             $favored = boolval($user->favoriteProducts()->find($product->id));
         }
 
-        return view('products.show', ['product' => $product, 'favored' => $favored]);
+        $reviews = OrderItem::query()
+            ->with(['order.user', 'productSku']) // 预先加载关联关系
+            ->where('product_id', $product->id)
+            ->whereNotNull('reviewed_at')
+            ->orderBy('reviewed_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('products.show', [
+            'product' => $product,
+            'favored' => $favored,
+            'reviews' => $reviews
+        ]);
     }
 
     public function favor(Product $product, Request $request)
@@ -83,6 +96,6 @@ class ProductsController extends Controller
     {
         $products = $request->user()->favoriteProducts()->paginate(16);
 
-        return view('products.favorites', ['products'=>$products]);
+        return view('products.favorites', ['products' => $products]);
     }
 }
